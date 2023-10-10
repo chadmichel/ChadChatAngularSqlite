@@ -1,0 +1,62 @@
+<!-- <div class="chat-container">
+  <div class="chat-messages">
+    <div
+      *ngFor="let message of messages"
+      [ngClass]="{ received: message.isReceived }"
+    >
+      <div class="message-content">
+        <p>{{ message.text }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-input">
+    <mat-form-field class="message-input">
+      <input
+        matInput
+        name="newMessage"
+        [(ngModel)]="newMessage"
+        placeholder="Message"
+      />
+    </mat-form-field>
+    <button mat-icon-button (click)="sendMessage()">
+      <mat-icon>send</mat-icon>
+    </button>
+  </div>
+</div> -->
+
+<div #chatmessages class="chat-messages">
+  <mat-card
+    *ngFor="let message of messages.value"
+    [ngClass]="{
+      'chat-message-mine': message.isMine,
+      'chat-message-theirs': !message.isMine
+    }"
+  >
+    <mat-card-content>
+      <p>{{ message.message }}</p>
+      <mat-divider></mat-divider>
+      <p *ngIf="message.isMine">
+        {{ message.createdOn | date : 'M/d h:mm a' }}
+      </p>
+      <p *ngIf="!message.isMine">
+        {{ message.senderDisplayName }}
+        {{ message.createdOn | date : 'M/d h:mm a' }}
+      </p>
+    </mat-card-content>
+  </mat-card>
+</div>
+<div class="chat-input">
+  <mat-form-field class="message-input">
+    <input
+      matInput
+      name="newMessage"
+      [(ngModel)]="newMessage"
+      placeholder="Message"
+      (keyup.enter)="sendMessage()"
+    />
+  </mat-form-field>
+  <button mat-icon-button (click)="sendMessage()">
+    <mat-icon>send</mat-icon>
+  </button>
+</div>

@@ -1,0 +1,25 @@
+<div class="app">
+  <div class="header">
+    <mat-toolbar class="header-toolbar" color="primary">
+      <span class="page-title">{{ pageTitle }}</span>
+      <button mat-icon-button (click)="gotoHome()">
+        <mat-icon>home</mat-icon>
+      </button>
+      <button mat-icon-button (click)="gotoLogin()">
+        <mat-icon>login</mat-icon>
+      </button>
+
+      <button mat-icon-button (click)="newChat()">
+        <mat-icon>add</mat-icon>
+      </button>
+
+      <button mat-icon-button (click)="newScreenshot()">
+        <mat-icon>screenshot</mat-icon>
+      </button>
+    </mat-toolbar>
+  </div>
+  <div class="main">
+    <router-outlet></router-outlet>
+  </div>
+  <div class="footer"></div>
+</div>
