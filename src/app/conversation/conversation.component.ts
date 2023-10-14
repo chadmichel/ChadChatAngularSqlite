@@ -84,11 +84,3 @@ export class ConversationComponent {
     }, 500);
   }
 }
-
-export interface ChatMessageItem {
-  id: string;
-  message: string;
-  createdOn: Date;
-  isMine: boolean;
-  senderDisplayName: string;
-}

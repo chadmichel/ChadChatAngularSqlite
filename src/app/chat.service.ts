@@ -188,10 +188,6 @@ export class ChatService {
       this.chatMessages$.set(chatId, chatMessages);
     }
 
-    setTimeout(async () => {
-      await this.updateMessages(chatId);
-    }, 1);
-
     return chatMessages;
   }
 
