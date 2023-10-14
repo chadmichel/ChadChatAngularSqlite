@@ -46,12 +46,12 @@ export class ConversationComponent {
       this.chatDetail = await this.chatService.getChat(this.id);
       this.chatDetail.subscribe((chat) => {
         this.title.setTitle('Chat with ' + chat.name);
-        this.scrollToBottom();
       });
 
       this.messages = await this.chatService.getChatMessages(this.id);
-
-      this.scrollToBottom();
+      this.messages.subscribe((messages) => {
+        this.scrollToBottom();
+      });
     });
   }
 
@@ -63,10 +63,14 @@ export class ConversationComponent {
   }
 
   scrollToBottom() {
-    var element = document.getElementById('chatmessages');
-    if (element) {
-      element.scrollTop = element.scrollHeight;
-    }
+    setTimeout(() => {
+      console.log('scrolling');
+      var element = document.getElementById('chatmessages');
+      if (element) {
+        element.scrollTop = element.scrollHeight + 1000;
+        console.log('scrolling to ' + element.scrollHeight);
+      }
+    }, 500);
   }
 }
 

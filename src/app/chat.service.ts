@@ -19,16 +19,16 @@ export class ChatService {
     ChatListItemModel[]
   >([]);
 
+  lastChatId: string = '';
   chatDetails$ = new Map<string, BehaviorSubject<ChatDetail>>();
-
   chatMessages$ = new Map<string, BehaviorSubject<MessageModel[]>>();
 
   constructor(private http: HttpUtilityService) {
     setInterval(() => {
       this.updateChats();
-      this.chatDetails$.forEach((value, key) => {
-        this.updateMessages(key);
-      });
+      if (this.lastChatId != '') {
+        this.updateMessages(this.lastChatId);
+      }
     }, 1000 * 60);
   }
 
@@ -67,6 +67,8 @@ export class ChatService {
 
   getChat(chatId: string): BehaviorSubject<ChatDetail> {
     // if we already have the chat detail, return it
+
+    this.lastChatId = chatId;
     let chatDetail$ = this.chatDetails$.get(chatId);
 
     if (chatDetail$ && chatDetail$.value) {
@@ -102,12 +104,7 @@ export class ChatService {
       chatUsers: [email, this.http.currentUser().email],
     })) as any;
     console.log(response);
-    this.reloadChats();
-  }
-
-  async reloadChats() {
-    const chats = await this.http.httpGet<ListItem<ChatListItem>[]>('chats');
-    this.chats$.next(chats);
+    this.updateChats();
   }
 
   async sendMessage(chatId: string, message: string) {
