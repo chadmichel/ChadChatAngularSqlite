@@ -42,15 +42,27 @@ export class ConversationComponent {
 
   async ngOnInit() {
     this.activeRoute.params.subscribe(async (params) => {
+      if (this.chatDetail) {
+        console.log('unsubscribing chatDetail');
+        this.chatDetail.unsubscribe();
+      }
+
       this.id = params['id'];
       this.chatDetail = await this.chatService.getChat(this.id);
       this.chatDetail.subscribe((chat) => {
         this.title.setTitle('Chat with ' + chat.name);
       });
 
+      if (this.messages) {
+        console.log('unsubscribing messages');
+        this.messages.unsubscribe();
+      }
+
       this.messages = await this.chatService.getChatMessages(this.id);
       this.messages.subscribe((messages) => {
-        this.scrollToBottom();
+        if (messages.length > 0) {
+          this.scrollToBottom();
+        }
       });
     });
   }
@@ -64,7 +76,6 @@ export class ConversationComponent {
 
   scrollToBottom() {
     setTimeout(() => {
-      console.log('scrolling');
       var element = document.getElementById('chatmessages');
       if (element) {
         element.scrollTop = element.scrollHeight + 1000;

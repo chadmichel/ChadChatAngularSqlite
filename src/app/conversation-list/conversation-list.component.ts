@@ -16,7 +16,6 @@ export class ConversationListComponent {
   chats$: BehaviorSubject<ChatListItemModel[]> = new BehaviorSubject<
     ChatListItemModel[]
   >([]);
-  //chats: ListItem<ChatListItem>[] = [];
   isLoaded: boolean = false;
 
   constructor(
@@ -28,13 +27,19 @@ export class ConversationListComponent {
   }
 
   ngOnInit() {
+    if (this.chats$) {
+      console.log('unsubscribing chats$');
+      this.chats$.unsubscribe();
+    }
+
     this.chats$ = this.chatService.getChats();
     this.chats$.subscribe((chats) => {
       console.log('loaded');
       console.log(chats.length);
       this.isLoaded = true;
-      console.log('setting title');
-      this.title.setTitle('Conversation List (' + chats.length + ')');
+      const titleText = 'Conversation List (' + chats.length + ')';
+      console.log('setting title: ' + titleText);
+      this.title.setTitle(titleText);
     });
   }
 

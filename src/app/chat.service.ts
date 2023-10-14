@@ -20,16 +20,43 @@ export class ChatService {
   >([]);
 
   lastChatId: string = '';
+  lastAction: Date = new Date();
   chatDetails$ = new Map<string, BehaviorSubject<ChatDetail>>();
   chatMessages$ = new Map<string, BehaviorSubject<MessageModel[]>>();
 
   constructor(private http: HttpUtilityService) {
-    setInterval(() => {
-      this.updateChats();
-      if (this.lastChatId != '') {
-        this.updateMessages(this.lastChatId);
-      }
-    }, 1000 * 60);
+    setTimeout(() => {
+      this.backgroundRefresh();
+    }, 1000 * 60); // 1 minute
+  }
+
+  backgroundRefresh() {
+    console.log('background refresh');
+    this.updateChats();
+    if (this.lastChatId != '') {
+      this.updateMessages(this.lastChatId);
+    }
+
+    var timeout = 1000 * 60; // 1 minute
+
+    // if last action was more than 5 minutes ago, refresh every 5 minutes
+    if (new Date().getTime() - this.lastAction.getTime() > 1000 * 60 * 5) {
+      timeout = 1000 * 60 * 5; // 5 minutes
+    }
+
+    // if last action was more than 30 minutes ago, refresh every 30 minutes
+    if (new Date().getTime() - this.lastAction.getTime() > 1000 * 60 * 30) {
+      timeout = 1000 * 60 * 30; // 30 minutes
+    }
+
+    // if last action was more than 1 hour ago, refresh in 1 day
+    if (new Date().getTime() - this.lastAction.getTime() > 1000 * 60 * 60) {
+      timeout = 1000 * 60 * 60 * 24; // 1 day
+    }
+
+    setTimeout(() => {
+      this.backgroundRefresh();
+    }, timeout);
   }
 
   getChats(): BehaviorSubject<ChatListItemModel[]> {
@@ -58,6 +85,21 @@ export class ChatService {
       } as ChatListItemModel;
     });
 
+    for (let chatModel of chatModels) {
+      if (this.chatDetails$.has(chatModel.id)) {
+        const prev = this.chatDetails$.get(chatModel.id)?.value;
+        this.chatDetails$.get(chatModel.id)?.next({
+          name: chatModel.name,
+          lastMessage: chatModel.lastMessage,
+          lastMessageTime: chatModel.lastMessageTime,
+          lastMessageBy: chatModel.lastMessageBy,
+          lastMessageById: chatModel.lastMessageById,
+          lastMessageByAvatar: chatModel.lastMessageByAvatar,
+          chatUsers: prev?.chatUsers ?? [],
+        });
+      }
+    }
+
     this.chats$.next(chatModels);
   }
 
@@ -66,6 +108,7 @@ export class ChatService {
   }
 
   getChat(chatId: string): BehaviorSubject<ChatDetail> {
+    this.lastAction = new Date();
     // if we already have the chat detail, return it
 
     this.lastChatId = chatId;
@@ -92,13 +135,35 @@ export class ChatService {
 
     // async load the messages
     setTimeout(async () => {
+      await this.updateChat(chatId);
       await this.updateMessages(chatId);
     }, 1);
 
     return chatDetail$;
   }
 
+  async updateChat(chatId: string) {
+    const chat = await this.loadChat(chatId);
+    const chatDetailModel = this.chatDetails$.get(chatId);
+    if (chatDetailModel) {
+      chatDetailModel.next({
+        name: chat.name,
+        lastMessage: chat.lastMessage,
+        lastMessageTime: new Date(chat.lastMessageTime),
+        lastMessageBy: chat.lastMessageBy,
+        lastMessageById: chat.lastMessageById,
+        lastMessageByAvatar: chat.lastMessageByAvatar,
+        chatUsers: chat.chatUsers,
+      });
+    }
+  }
+
+  async loadChat(chatId: string): Promise<ChatDetail> {
+    return await this.http.httpGet<ChatDetail>('chats/' + chatId);
+  }
+
   async createChat(email: string) {
+    this.lastAction = new Date();
     var response = (await this.http.httpPost('chats', {
       name: 'Chat ' + email + ' ' + this.http.currentUser().email,
       chatUsers: [email, this.http.currentUser().email],
@@ -108,6 +173,7 @@ export class ChatService {
   }
 
   async sendMessage(chatId: string, message: string) {
+    this.lastAction = new Date();
     var response = (await this.http.httpPost('chats/' + chatId + '/messages', {
       message: message,
     })) as any;
